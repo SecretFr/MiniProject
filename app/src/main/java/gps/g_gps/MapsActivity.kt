@@ -27,8 +27,9 @@ import java.io.IOException
 @Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnMarkerClickListener{
-    override fun onMarkerClick(p0: Marker?): Boolean {
-        return false
+    override fun onMarkerClick(marker:Marker): Boolean {
+        Toast.makeText(this, ""+marker.position, Toast.LENGTH_LONG).show()
+        return true
     }
 
     private lateinit var mMap: GoogleMap

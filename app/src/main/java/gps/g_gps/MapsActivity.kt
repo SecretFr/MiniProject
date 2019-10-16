@@ -11,6 +11,7 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -28,13 +29,19 @@ import com.google.firebase.database.*
 import java.io.IOException
 
 data class UserItem(
-    val name: String = "",
-    val latitude: String = "",
-    val longitude: String = ""
+    var id: String = "",
+    var latitude: String = "",
+    var longitude: String = "",
+    var redzone: String = "",
+    var friends: String = ""
+)
+
+data class Pos(
+    var latitude: String = "",
+    var longitude: String = ""
 )
 
 
-@Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnMarkerClickListener {
     override fun onMarkerClick(p0: Marker?): Boolean {
@@ -42,12 +49,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     //데이터베이스var
-    var auth: FirebaseAuth = FirebaseAuth.getInstance()
-    var database: FirebaseDatabase = FirebaseDatabase.getInstance()
-    var myRef: DatabaseReference = database.reference
+    private lateinit var database: FirebaseDatabase
+    private lateinit var myRef: DatabaseReference
 
 
-    var test2 : Intent = getIntent()
+    private lateinit var intent1 : Intent
+    var userid :String = ""
+    var useruid :String = ""
 
 
     private lateinit var mMap: GoogleMap
@@ -63,7 +71,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         setContentView(R.layout.activity_maps)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
-        var test3 = test2.getStringExtra("usertest")
+        database = FirebaseDatabase.getInstance()
+        myRef = database.reference
+        intent1 = getIntent()
+
+        userid = intent1.getStringExtra("userid")
+        useruid = intent1.getStringExtra("useruid")
+
+        //var intent2 = intent1.getStringExtra("usertest")
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -84,47 +99,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    //데이터베이스에 값들 등록함
+    private fun writeNewUser(uid: String, id: String, latitude: String, longitude: String, redzone: String, friends: String) {
+        val user = UserItem(id, latitude, longitude, redzone, friends)
+       // val pos = Pos(latitude, longitude)
+        myRef.child(uid).setValue(user)
+    }
+
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        //var lati = myRef1.database.getReference("latitude") as Double
-        //var longi = myRef2.database.getReference("longitude") as Double
+        //현재 접속중인 유저중
+        //val nUser = FirebaseAuth.getInstance().currentUser
+        //if(nUser != null) {
+            //친구마커uid 읽어들일 방법찾기! 구상중인것 = uid -> id -> 나머지... child(id)이렇게?
+            myRef.child("MrxcK7JOeObDWsAVHZUvOXNNs3r1").addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(database: DatabaseError) {
+                }
 
-        //Toast.makeText(this@MapsActivity, "위도: $lati, 경도: $longi", Toast.LENGTH_LONG).show()
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
 
-        //val pos = LatLng(lati, longi)
-        //val pos = LatLng(36.4473078035503, 128.323783017259)
+                    var get_pos = dataSnapshot.getValue(UserItem::class.java)
+                    var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
+                    //Toast.makeText(this@MapsActivity, "$get_pos", Toast.LENGTH_LONG).show()
 
-        //mMap.addMarker(MarkerOptions().position(pos).title("test Marker"))
-        myRef.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(database: DatabaseError) {
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                //var user = myRef.database.getReference("name")
-                //var lat = myRef.database.getReference("latitude")
-                //var lon = myRef.database.getReference("longitude")
-                var tname = dataSnapshot.getValue(UserItem::class.java)
-                //Toast.makeText(this@MapsActivity, tname?.latitude, Toast.LENGTH_LONG).show()
-                var posx = tname?.latitude
-                var posy = tname?.longitude
-                var pos = LatLng(posx!!.toDouble(), posy!!.toDouble())
-                //Toast.makeText(this@MapsActivity, "$pos", Toast.LENGTH_LONG).show()
-
-                //var intent2 : Intent = getIntent()
-                //var test3 = intent2.getStringExtra("usertest")
-                mMap.addMarker(MarkerOptions().position(pos).title("${tname?.name}"))
-            }
-         })
+                    mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
+                }
+            })
+        //}
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
 
@@ -151,24 +154,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 placeMarkerOnMap(currentLatLng)
-
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
 
-                //Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
-
-                //Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
-                //    Toast.LENGTH_LONG).show()
-
-                //myName.setValue(test3)
-                //myRef1.setValue("${location.latitude}")
-                //myRef2.setValue("${location.longitude}")
-                //var test2 : Intent =
-                //var test3  = test2.getStringExtra("usertest")
-
-                var user = UserItem("${location.latitude}", "${location.longitude}")
-                //myRef.setValue(user)
-                myRef.child("$test3").setValue(user)
+                //데이터베이스에 uid, 좌표값저장
+                //Toast.makeText(this@MapsActivity, "$userid", Toast.LENGTH_LONG).show()
+                //writeNewUser("$useruid", "${location.latitude}", "${location.longitude}")
+                writeNewUser("$useruid","$userid","${location.latitude}", "${location.longitude}", "", "")
             }
         }
 

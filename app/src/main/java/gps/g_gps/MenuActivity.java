@@ -31,7 +31,8 @@ public class MenuActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(MenuActivity.this, MapsActivity.class);
                 Intent intent2 = getIntent();
-                intent.putExtra("usertest", intent2.getStringExtra("testuser"));
+                intent.putExtra("userid", intent2.getStringExtra("userid"));
+                intent.putExtra("useruid", intent2.getStringExtra("useruid"));
                 startActivity(intent);
             }
         });

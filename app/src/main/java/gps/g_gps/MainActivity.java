@@ -70,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
                                         */
                                         auth.signInWithEmailAndPassword(loginId.getText().toString(), loginPw.getText().toString());
                                         Toast.makeText(MainActivity.this, "로그인 성공!", Toast.LENGTH_SHORT).show();
-
                                         Intent intent = new Intent(MainActivity.this, MenuActivity.class);
+                                        intent.putExtra("testuser", loginId.getText().toString());
                                         startActivity(intent);
                                     } else {
                                         Toast.makeText(MainActivity.this, "로그인 실패", Toast.LENGTH_SHORT).show();

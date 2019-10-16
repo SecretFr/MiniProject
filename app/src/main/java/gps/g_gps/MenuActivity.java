@@ -13,6 +13,8 @@ public class MenuActivity extends AppCompatActivity {
     Button setBtn;
     Button regBtn;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,8 +30,11 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MenuActivity.this, MapsActivity.class);
+                Intent intent2 = getIntent();
+                intent.putExtra("usertest", intent2.getStringExtra("testuser"));
                 startActivity(intent);
             }
         });
+
     }
 }

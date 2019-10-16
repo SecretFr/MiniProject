@@ -1,5 +1,6 @@
 package gps.g_gps
 
+
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
@@ -8,28 +9,46 @@ import android.graphics.BitmapFactory
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
-import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.location.places.ui.PlacePicker
-import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.*
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 import java.io.IOException
+
+data class UserItem(
+    val name: String = "",
+    val latitude: String = "",
+    val longitude: String = ""
+)
+
 
 @Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener{
+    GoogleMap.OnMarkerClickListener {
     override fun onMarkerClick(p0: Marker?): Boolean {
         return false
     }
+
+    //데이터베이스var
+    var auth: FirebaseAuth = FirebaseAuth.getInstance()
+    var database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    var myRef: DatabaseReference = database.reference
+
+
+    var test2 : Intent = getIntent()
+
 
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -43,6 +62,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+        var test3 = test2.getStringExtra("usertest")
+
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -74,8 +96,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
+        //var lati = myRef1.database.getReference("latitude") as Double
+        //var longi = myRef2.database.getReference("longitude") as Double
+
+        //Toast.makeText(this@MapsActivity, "위도: $lati, 경도: $longi", Toast.LENGTH_LONG).show()
+
+        //val pos = LatLng(lati, longi)
+        //val pos = LatLng(36.4473078035503, 128.323783017259)
+
+        //mMap.addMarker(MarkerOptions().position(pos).title("test Marker"))
+        myRef.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(database: DatabaseError) {
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                //var user = myRef.database.getReference("name")
+                //var lat = myRef.database.getReference("latitude")
+                //var lon = myRef.database.getReference("longitude")
+                var tname = dataSnapshot.getValue(UserItem::class.java)
+                //Toast.makeText(this@MapsActivity, tname?.latitude, Toast.LENGTH_LONG).show()
+                var posx = tname?.latitude
+                var posy = tname?.longitude
+                var pos = LatLng(posx!!.toDouble(), posy!!.toDouble())
+                //Toast.makeText(this@MapsActivity, "$pos", Toast.LENGTH_LONG).show()
+
+                //var intent2 : Intent = getIntent()
+                //var test3 = intent2.getStringExtra("usertest")
+                mMap.addMarker(MarkerOptions().position(pos).title("${tname?.name}"))
+            }
+         })
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
+
 
         setUpMap()
     }
@@ -99,23 +151,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 placeMarkerOnMap(currentLatLng)
+
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
-                Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
 
-                Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
-                    Toast.LENGTH_LONG).show()
+                //Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
+
+                //Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
+                //    Toast.LENGTH_LONG).show()
+
+                //myName.setValue(test3)
+                //myRef1.setValue("${location.latitude}")
+                //myRef2.setValue("${location.longitude}")
+                //var test2 : Intent =
+                //var test3  = test2.getStringExtra("usertest")
+
+                var user = UserItem("${location.latitude}", "${location.longitude}")
+                //myRef.setValue(user)
+                myRef.child("$test3").setValue(user)
             }
         }
+
+
+
+
+
+
     }
 
     private fun placeMarkerOnMap(location: LatLng) {
         // 1
         val markerOptions = MarkerOptions().position(location)
         // 2
-        /*markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
+
+        markerOptions.icon(
+            BitmapDescriptorFactory.fromBitmap(
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
-        ))*/
+        ))
 
         val titleStr = getAddress(location)  // add these two lines
         markerOptions.title(titleStr)
@@ -226,3 +298,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
 
 }
+/*
+    원의 방정식
+    원의 중심이 (x,y)고, 임의의 좌표가 (a,b)이고, r이 반지름이면,
+    (x-a)^2 + (y-b)^2 <= r2 이면
+    (a,b)는 원안에 속하는 좌표인것이다.
+ */

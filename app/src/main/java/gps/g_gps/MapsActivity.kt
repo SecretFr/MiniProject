@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -13,6 +14,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -23,14 +25,13 @@ import com.google.android.gms.maps.model.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import java.io.IOException
+import com.google.android.gms.maps.GoogleMap
+
+
 
 @Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener{
-    override fun onMarkerClick(marker:Marker): Boolean {
-        Toast.makeText(this, ""+marker.position, Toast.LENGTH_LONG).show()
-        return true
-    }
+    GoogleMap.OnMarkerClickListener, GoogleMap.OnCircleClickListener{
 
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -38,7 +39,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-    //private lateinit var geocoder: Geocoder
+
+    var array = ArrayList<Double>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,9 +79,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
-
+        mMap.setOnCircleClickListener{it
+            onCircleClick(it)
+        }
+        mMap.setOnMapClickListener {it
+            placeCircleOnMap(it)
+            Toast.makeText(this@MapsActivity, ""+it, Toast.LENGTH_LONG).show()
+        }
         setUpMap()
     }
+
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
@@ -100,6 +109,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 placeMarkerOnMap(currentLatLng)
+                //placeCircleOnMap(currentLatLng)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
                 Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
@@ -107,45 +117,49 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
                     Toast.LENGTH_LONG).show()
             }
-        }
-    }
 
+        }
+
+
+
+
+    }
     private fun placeMarkerOnMap(location: LatLng) {
         // 1
         val markerOptions = MarkerOptions().position(location)
         // 2
-        /*markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
-        ))*/
+        ))
 
-        val titleStr = getAddress(location)  // add these two lines
-        markerOptions.title(titleStr)
+        //val titleStr = getAddress(location)  // add these two lines
+        markerOptions.position(location)
         mMap.addMarker(markerOptions)
     }
 
-    private fun getAddress(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        val address: Address?
-        var addressText = ""
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-                address = addresses[0]
-                for (i in 0 until address.maxAddressLineIndex) {
-                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
-                }
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return addressText
+    //private lateinit var geocoder: Geocoder
+    override fun onMarkerClick(marker:Marker): Boolean {
+        Toast.makeText(this, ""+marker.position, Toast.LENGTH_LONG).show()
+        marker.remove()
+        return true
     }
+
+    private fun placeCircleOnMap(location: LatLng){
+        val circleOptions = CircleOptions()
+            .center(location)
+            .radius(1000.0)
+            .strokeColor(Color.BLACK)
+            .fillColor(Color.RED)
+            .clickable(true)
+        mMap.addCircle(circleOptions)
+    }
+
+    override fun onCircleClick(circle: Circle) {
+        //circle.isClickable
+
+        circle.remove()
+    }
+
 
     private fun startLocationUpdates() {
         //1
@@ -223,7 +237,36 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
+    /*override fun onMapClick(location: LatLng){
 
+    }*/
 
+    /*private fun getAddress(latLng: LatLng): String {
+        // 1
+        val geocoder = Geocoder(this)
+        val addresses: List<Address>?
+        val address: Address?
+        var addressText = ""
 
+        try {
+            // 2
+            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            // 3
+            if (null != addresses && !addresses.isEmpty()) {
+                address = addresses[0]
+                for (i in 0 until address.maxAddressLineIndex) {
+                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
+                }
+            }
+        } catch (e: IOException) {
+            Log.e("MapsActivity", e.localizedMessage)
+        }
+
+        return addressText
+    }*/
+
+    //원의 중심 x,y 마커의 좌표 (a,b), 반지름 r 이면
+    // (x-a)^2 + (y-b)^2 <= r*2 면
+    //마커는 원안에 속하는 좌표임
 }
+

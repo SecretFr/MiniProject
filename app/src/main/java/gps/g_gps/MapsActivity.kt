@@ -27,9 +27,8 @@ import java.io.IOException
 @Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnMarkerClickListener{
-    override fun onMarkerClick(marker: Marker): Boolean {
-        Toast.makeText(this, ""+marker.position, Toast.LENGTH_LONG).show()
-        return true
+    override fun onMarkerClick(p0: Marker?): Boolean {
+        return false
     }
 
     private lateinit var mMap: GoogleMap
@@ -99,7 +98,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             if(location != null){
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                //val curAddress =
                 placeMarkerOnMap(currentLatLng)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
@@ -115,13 +113,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         // 1
         val markerOptions = MarkerOptions().position(location)
         // 2
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
+        /*markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
-        ))
+        ))*/
 
         val titleStr = getAddress(location)  // add these two lines
         markerOptions.title(titleStr)
-
         mMap.addMarker(markerOptions)
     }
 

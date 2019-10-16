@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/create_Id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="아이디" />
+
+    <EditText
+        android:id="@+id/create_Pw"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/create_Id"
+        android:layout_marginTop="5dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="패스워드" />
+
+    <EditText
+        android:id="@+id/create_Pw2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/create_Pw"
+        android:layout_marginTop="5dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="패스워드 재확인" />
+
+    <Button
+        android:id="@+id/map_btn"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/create_Pw2"
+        android:layout_marginTop="10dp"
+        android:text="회원가입" />
+
+    <Button
+        android:id="@+id/cancel_Btn"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/map_btn"
+        android:layout_marginTop="5dp"
+        android:text="취소" />
+</RelativeLayout>

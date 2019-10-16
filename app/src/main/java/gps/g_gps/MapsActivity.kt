@@ -6,30 +6,19 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.location.Address
-import android.location.Geocoder
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
-import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.location.places.ui.PlacePicker
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-
-import java.io.IOException
 import com.google.android.gms.maps.GoogleMap
+import kotlin.math.*
 
-
-
-@Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnMarkerClickListener, GoogleMap.OnCircleClickListener{
 
@@ -39,8 +28,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-
-    var array = ArrayList<Double>()
+    private lateinit var markerLocation: LatLng
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +72,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         }
         mMap.setOnMapClickListener {it
             placeCircleOnMap(it)
-            Toast.makeText(this@MapsActivity, ""+it, Toast.LENGTH_LONG).show()
+            Toast.makeText(this@MapsActivity, "서클 중심 : $it", Toast.LENGTH_LONG).show()
         }
         setUpMap()
     }
@@ -94,6 +82,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         private const val REQUEST_CHECK_SETTINGS = 2
         private const val PLACE_PICKER_REQUEST = 3
     }
+
     private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -109,38 +98,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 placeMarkerOnMap(currentLatLng)
-                //placeCircleOnMap(currentLatLng)
+                markerLocation = currentLatLng
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
                 Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
 
-                Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
-                    Toast.LENGTH_LONG).show()
+                //Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
+                  //  Toast.LENGTH_LONG).show()
             }
 
         }
-
-
-
-
     }
+
     private fun placeMarkerOnMap(location: LatLng) {
-        // 1
         val markerOptions = MarkerOptions().position(location)
-        // 2
+
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
         ))
-
-        //val titleStr = getAddress(location)  // add these two lines
         markerOptions.position(location)
         mMap.addMarker(markerOptions)
     }
 
-    //private lateinit var geocoder: Geocoder
     override fun onMarkerClick(marker:Marker): Boolean {
-        Toast.makeText(this, ""+marker.position, Toast.LENGTH_LONG).show()
-        marker.remove()
+        Toast.makeText(this, "marker1 : "+marker.position, Toast.LENGTH_LONG).show()
         return true
     }
 
@@ -152,13 +133,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             .fillColor(Color.RED)
             .clickable(true)
         mMap.addCircle(circleOptions)
+
+        val CirX: Double = location.latitude
+        val CirY: Double = location.longitude
+        val CirRad: Double = 1000.0
+        /*Toast.makeText(this, "marker pos : "+markerLocation, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "X pos : "+CirX, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Y pos"+CirY, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "CirRad : "+CirRad, Toast.LENGTH_SHORT).show()*/
+        CheckOnMarker(CirX, CirY, CirRad, markerLocation)
     }
 
     override fun onCircleClick(circle: Circle) {
-        //circle.isClickable
-
         circle.remove()
     }
+
+    private fun CheckOnMarker(x: Double, y:Double, rad: Double, location: LatLng){
+        
+        if((x-location.latitude).pow(2) + (y-location.longitude).pow(2) <= (0.0004597 *2)){
+            Toast.makeText(this, "Red Zone!", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this, "Safe!", Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+
+
 
 
     private fun startLocationUpdates() {
@@ -265,8 +266,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         return addressText
     }*/
 
-    //원의 중심 x,y 마커의 좌표 (a,b), 반지름 r 이면
-    // (x-a)^2 + (y-b)^2 <= r*2 면
-    //마커는 원안에 속하는 좌표임
+
 }
 

@@ -1,8 +1,10 @@
 package gps.g_gps
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -17,7 +19,6 @@ import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.GoogleMap
-import java.lang.String.format
 import kotlin.math.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
@@ -30,6 +31,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
     private lateinit var markerLocation: LatLng
+    private var circleList = mutableListOf<Circle>()
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +55,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         createLocationRequest()
 
 
+
     }
+
 
     /**
      * Manipulates the map once available.
@@ -118,7 +123,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
         ))
         markerOptions.position(location)
-
         //markerLocation = markerOptions.position
         mMap.addMarker(markerOptions)
     }
@@ -132,10 +136,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         val circleOptions = CircleOptions()
             .center(location)
             .radius(1000.0)
-            .strokeColor(Color.BLACK)
-            .fillColor(Color.RED)
+            .fillColor(0x220000FF)
+            .strokeColor(Color.RED)
             .clickable(true)
         mMap.addCircle(circleOptions)
+
+        circleList.add(mMap.addCircle(circleOptions.center(location)))
+        sharedPreferences = getPreferences(Context.MODE_PRIVATE)
+        var editor = sharedPreferences.edit()
+
+        editor.putInt("listSize", circleList.size)
+
+
+        //원을 저장해야되는데 type이 맞지 않아서 잘 안됨..
+        for(i in circleList){
+            editor.putFloat("lat$i", circleList[0].center.latitude.toFloat());
+            editor.putFloat("long$i", circleList[0].center.longitude.toFloat());
+            Toast.makeText(this, "lati test : "+i+circleList.get(0).getCenter().latitude.toFloat(), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "long test : "+i+circleList.get(0).getCenter().longitude.toFloat(), Toast.LENGTH_LONG).show()
+        }
+
+        editor.apply()
 
         val CirX: Double = location.latitude
         val CirY: Double = location.longitude
@@ -291,34 +312,4 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    /*override fun onMapClick(location: LatLng){
-
-    }*/
-
-    /*private fun getAddress(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        val address: Address?
-        var addressText = ""
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-                address = addresses[0]
-                for (i in 0 until address.maxAddressLineIndex) {
-                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
-                }
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return addressText
-    }*/
-
-
 }
-

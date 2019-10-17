@@ -78,6 +78,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         userid = intent1.getStringExtra("userid")
         useruid = intent1.getStringExtra("useruid")
 
+
+
         //var intent2 = intent1.getStringExtra("usertest")
 
         val mapFragment = supportFragmentManager
@@ -107,6 +109,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
 
+
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -128,6 +132,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 }
             })
         //}
+
+
+
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
 

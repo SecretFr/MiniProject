@@ -18,6 +18,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import static com.google.firebase.auth.FirebaseAuth.*;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -26,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase database;              //메시지전송 데이터베이스
     DatabaseReference myRef1;
     DatabaseReference myRef2;
+
+    FirebaseAuth.AuthStateListener mAuthListener;
 
     EditText loginId;
     EditText loginPw;
@@ -38,10 +42,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        auth = FirebaseAuth.getInstance();
+        auth = getInstance();
         database = FirebaseDatabase.getInstance();
         myRef1 = database.getReference("id");
         myRef2 = database.getReference("password");
+
 
         loginId = (EditText) findViewById(R.id.login_id);
         loginPw = (EditText) findViewById(R.id.login_pw);
@@ -49,7 +54,17 @@ public class MainActivity extends AppCompatActivity {
         loginTxt = (TextView) findViewById(R.id.textView);
         createAcc = (Button) findViewById(R.id.create_Acc);
 
-
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(FirebaseAuth authData) {
+                if (authData != null) {
+                    //접속한사람들
+                    Toast.makeText(MainActivity.this, "계정:"+authData,Toast.LENGTH_LONG).show();
+                } else {
+                    //로그아웃
+                }
+            }
+        };
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override

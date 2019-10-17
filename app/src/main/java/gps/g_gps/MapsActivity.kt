@@ -5,23 +5,31 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
-import android.graphics.Color
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.location.places.ui.PlacePicker
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import com.google.android.gms.maps.GoogleMap
-import java.lang.String.format
-import kotlin.math.*
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
+import java.io.IOException
+
+@Suppress("DEPRECATION")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, GoogleMap.OnCircleClickListener{
+    GoogleMap.OnMarkerClickListener{
+    override fun onMarkerClick(p0: Marker?): Boolean {
+        return false
+    }
 
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -29,7 +37,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-    private lateinit var markerLocation: LatLng
+    //private lateinit var geocoder: Geocoder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,22 +76,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
-        mMap.setOnCircleClickListener{it
-            onCircleClick(it)
-        }
-        mMap.setOnMapClickListener {it
-            placeCircleOnMap(it)
-            Toast.makeText(this@MapsActivity, "서클 중심 : $it", Toast.LENGTH_LONG).show()
-        }
+
         setUpMap()
     }
-
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
         private const val PLACE_PICKER_REQUEST = 3
     }
-
     private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -99,120 +99,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 placeMarkerOnMap(currentLatLng)
-                markerLocation = currentLatLng
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
                 Log.d("MapsActivity", "위도: ${location.latitude}, 경도: ${location.longitude}")
 
-                //Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
-                  //  Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MapsActivity, "위도: ${location.latitude}, 경도: ${location.longitude}",
+                    Toast.LENGTH_LONG).show()
             }
-
         }
     }
 
     private fun placeMarkerOnMap(location: LatLng) {
+        // 1
         val markerOptions = MarkerOptions().position(location)
-
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
+        // 2
+        /*markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
             BitmapFactory.decodeResource(resources,R.mipmap.ic_user_location)
-        ))
-        markerOptions.position(location)
+        ))*/
 
-        //markerLocation = markerOptions.position
+        val titleStr = getAddress(location)  // add these two lines
+        markerOptions.title(titleStr)
         mMap.addMarker(markerOptions)
     }
 
-    override fun onMarkerClick(marker:Marker): Boolean {
-        Toast.makeText(this, "marker1 : "+marker.position, Toast.LENGTH_LONG).show()
-        return true
-    }
+    private fun getAddress(latLng: LatLng): String {
+        // 1
+        val geocoder = Geocoder(this)
+        val addresses: List<Address>?
+        val address: Address?
+        var addressText = ""
 
-    private fun placeCircleOnMap(location: LatLng){
-        val circleOptions = CircleOptions()
-            .center(location)
-            .radius(1000.0)
-            .strokeColor(Color.BLACK)
-            .fillColor(Color.RED)
-            .clickable(true)
-        mMap.addCircle(circleOptions)
-
-        val CirX: Double = location.latitude
-        val CirY: Double = location.longitude
-        val CirRad: Double = 1000.0
-        /*Toast.makeText(this, "marker pos : "+markerLocation, Toast.LENGTH_SHORT).show()
-        Toast.makeText(this, "X pos : "+CirX, Toast.LENGTH_SHORT).show()
-        Toast.makeText(this, "Y pos"+CirY, Toast.LENGTH_SHORT).show()
-        Toast.makeText(this, "CirRad : "+CirRad, Toast.LENGTH_SHORT).show()*/
-        CheckOnMarker(CirX, CirY, CirRad, markerLocation)
-    }
-
-    override fun onCircleClick(circle: Circle) {
-        circle.remove()
-    }
-
-    private fun CheckOnMarker(x: Double, y:Double, rad: Double, location: LatLng){
-        /*
-        val DIV_VALUE: Int = 10000000
-        /*
-        위도, 경도에 대한 절대값 계산
-         */
-        var lat: Double = if (x > location.latitude)  (x-location.latitude)/DIV_VALUE.toDouble() else (location.latitude-x)/DIV_VALUE.toDouble()
-        var lon: Double = if (y > location.longitude)  (y-location.longitude)/DIV_VALUE.toDouble() else (location.longitude-y)/DIV_VALUE.toDouble()
-
-        /*
-        경도에 대한 도분초및 거리 계산
-         */
-        var radi:Int = lon.toInt()
-        var min: Int = (lon.toInt() - radi)*60
-        var sec: Double = ((lon-radi)*60 - min)*60
-        var lon_dist: Int
-        var lat_dist: Int
-        var nCmpLat: Int = 0
-        var nCmpLon: Int = 0
-        lon_dist = (((radi*88.8)+(min*1.48)*(sec*0.025))*1000).toInt()
-
-        /*
-        위도에 대한 도분초및 거리 계산
-         */
-        radi = lat.toInt()
-        min = (lat.toInt()-radi)*60
-        sec = ((lat-radi)*60 - min)*60
-        lat_dist = (((radi*111)+(min*1.85)*(sec*0.031))*1000).toInt()
-
-        if( nCmpLat == 0 ) { // 원 형태의 구역반경
-
-            // 직선거리만을 조건으로 한다.
-            var realDist: Int =
-                (sqrt((lon_dist * lon_dist).toDouble() + (lat_dist * lat_dist).toDouble())).toInt();
-
-            if (nCmpLon >= realDist) {
-                Toast.makeText(this, "Red Zone123", Toast.LENGTH_SHORT).show()
+        try {
+            // 2
+            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            // 3
+            if (null != addresses && !addresses.isEmpty()) {
+                address = addresses[0]
+                for (i in 0 until address.maxAddressLineIndex) {
+                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
+                }
             }
-        } else if (nCmpLat >= lat_dist && nCmpLon >= lon_dist) { // 사각 형태의 구역반경
-               // 종/횡측 거리안에 들어오는지 확인한다.
-            Toast.makeText(this, "Red Zone!", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Safe!", Toast.LENGTH_SHORT).show()
-        }*/
-        /*
-            원의 중심 x,y 마커의 좌표 (a,b), 반지름 r 이면
-             (x-a)^2 + (y-b)^2 <= r*2 면
-            마커는 원안에 속하는 좌표임
-         */
-        /*var x1: Double = x + rad * cos(atan2(y,x) * Math.PI / 180)
-        var y1: Double = y + rad * sin(atan2(y,x) * Math.PI / 180)
-
-        Toast.makeText(this, "x1 : $x1", Toast.LENGTH_SHORT).show()
-        Toast.makeText(this, "y1 : $y1", Toast.LENGTH_SHORT).show()*/
-        //Toast.makeText(this, x., .LENGTH_LONG).show()
-        //Toast.makeText(this, "계산한 거 : "+abs(x-location.latitude).pow(2) + abs(y-location.longitude).pow(2), Toast.LENGTH_LONG).show()
-        if(abs(x-location.latitude).pow(2) + abs(y-location.longitude).pow(2) <= (0.0004597 *2)){
-            Toast.makeText(this, "Red Zone!", Toast.LENGTH_SHORT).show()
-        }else{
-            Toast.makeText(this, "Safe!", Toast.LENGTH_SHORT).show()
+        } catch (e: IOException) {
+            Log.e("MapsActivity", e.localizedMessage)
         }
 
+        return addressText
     }
 
     private fun startLocationUpdates() {
@@ -291,34 +222,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    /*override fun onMapClick(location: LatLng){
 
-    }*/
-
-    /*private fun getAddress(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        val address: Address?
-        var addressText = ""
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-                address = addresses[0]
-                for (i in 0 until address.maxAddressLineIndex) {
-                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
-                }
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return addressText
-    }*/
 
 
 }
-

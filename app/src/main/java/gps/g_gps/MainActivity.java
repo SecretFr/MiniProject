@@ -85,10 +85,12 @@ public class MainActivity extends AppCompatActivity {
                                         */
                                         auth.signInWithEmailAndPassword(loginId.getText().toString(), loginPw.getText().toString());
                                         Toast.makeText(MainActivity.this, "로그인 성공!", Toast.LENGTH_SHORT).show();
-                                        String uid = auth.getCurrentUser().getUid();
+                                        //String uid = auth.getCurrentUser().getUid();
+                                        //특수문자 치환하여 전달
+                                        String userid = loginId.getText().toString().replace("@","_").replace(".","_");
                                         Intent intent = new Intent(MainActivity.this, MenuActivity.class);
-                                        intent.putExtra("userid", loginId.getText().toString());        //메일값넘길때
-                                        intent.putExtra("useruid", uid);  //uid넘길때testuser
+                                        intent.putExtra("userid", "$userid");        //메일값넘길때
+                                        //intent.putExtra("useruid", uid);  //uid넘기기
                                         startActivity(intent);
                                     } else {
                                         Toast.makeText(MainActivity.this, "로그인 실패", Toast.LENGTH_SHORT).show();

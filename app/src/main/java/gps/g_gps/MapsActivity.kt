@@ -55,7 +55,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private lateinit var intent1 : Intent
     var userid :String = ""
-    var useruid :String = ""
+    //var useruid :String = ""
 
 
     private lateinit var mMap: GoogleMap
@@ -76,7 +76,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         intent1 = getIntent()
 
         userid = intent1.getStringExtra("userid")
-        useruid = intent1.getStringExtra("useruid")
+        //useruid = intent1.getStringExtra("useruid")
 
 
 
@@ -102,10 +102,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     //데이터베이스에 값들 등록함
-    private fun writeNewUser(uid: String, id: String, latitude: String, longitude: String, redzone: String, friends: String) {
-        val user = UserItem(id, latitude, longitude, redzone, friends)
+    private fun writeNewUser(id: String, latitude: String, longitude: String, redzone: String, friends: String) {
+        val user = UserItem(latitude, longitude, redzone, friends)
        // val pos = Pos(latitude, longitude)
-        myRef.child(uid).setValue(user)
+        myRef.child("users").child(id).setValue(user)
     }
 
 
@@ -114,21 +114,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        //현재 접속중인 유저중
-        //val nUser = FirebaseAuth.getInstance().currentUser
-        //if(nUser != null) {
-            //친구마커uid 읽어들일 방법찾기! 구상중인것 = uid -> id -> 나머지... child(id)이렇게?
-            myRef.child("MrxcK7JOeObDWsAVHZUvOXNNs3r1").addValueEventListener(object : ValueEventListener {
+            //상대방 위치주소 가져오기
+            myRef.child("users").child("$userid").addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(database: DatabaseError) {
                 }
 
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-
                     var get_pos = dataSnapshot.getValue(UserItem::class.java)
                     var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
                     //Toast.makeText(this@MapsActivity, "$get_pos", Toast.LENGTH_LONG).show()
 
-                    mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
+                    //mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
                 }
             })
         //}
@@ -167,7 +163,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 //데이터베이스에 uid, 좌표값저장
                 //Toast.makeText(this@MapsActivity, "$userid", Toast.LENGTH_LONG).show()
                 //writeNewUser("$useruid", "${location.latitude}", "${location.longitude}")
-                writeNewUser("$useruid","$userid","${location.latitude}", "${location.longitude}", "", "")
+                writeNewUser("$userid","${location.latitude}", "${location.longitude}", "", "")
             }
         }
 

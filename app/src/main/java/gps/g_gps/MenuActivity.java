@@ -2,12 +2,10 @@ package gps.g_gps;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,13 +17,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-class Post {
-    String id;
-    String latitude;
-    String longitude;
-    String redzone;
-    String friends;
-};
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -70,17 +61,28 @@ public class MenuActivity extends AppCompatActivity {
 
 
 
-        //셋팅버튼
+        //레드존 셋팅버튼
         setBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String test = myRef.toString();
-                Toast.makeText(MenuActivity.this,test, Toast.LENGTH_LONG).show();
+                String test1 = "ok-naver_com";
+                String test2 = test1.replace("-","@").replace("_",".");
+
+                //String test = myRef.child(test2);
+                Toast.makeText(MenuActivity.this,test2, Toast.LENGTH_LONG).show();
 
             }
         });
 
 
+
+        //친구 등록
+        regBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
 
     }//onCreate
 

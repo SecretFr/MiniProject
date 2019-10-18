@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                                         //특수문자 치환하여 전달
                                         String userid = loginId.getText().toString().replace("@","_").replace(".","_");
                                         Intent intent = new Intent(MainActivity.this, MenuActivity.class);
-                                        intent.putExtra("userid", "$userid");        //메일값넘길때
+                                        intent.putExtra("userid", userid);        //메일값넘길때
                                         //intent.putExtra("useruid", uid);  //uid넘기기
                                         startActivity(intent);
                                     } else {

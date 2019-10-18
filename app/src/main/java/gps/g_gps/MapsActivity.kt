@@ -69,18 +69,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
         database = FirebaseDatabase.getInstance()
         myRef = database.reference
         intent1 = getIntent()
-
         userid = intent1.getStringExtra("userid")
         //useruid = intent1.getStringExtra("useruid")
 
 
-
-        //var intent2 = intent1.getStringExtra("usertest")
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -99,37 +95,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         createLocationRequest()
 
 
-    }
+    } // onCreate
 
     //데이터베이스에 값들 등록함
     private fun writeNewUser(id: String, latitude: String, longitude: String, redzone: String, friends: String) {
-        val user = UserItem(latitude, longitude, redzone, friends)
+        val user = UserItem(id, latitude, longitude, redzone, friends)
        // val pos = Pos(latitude, longitude)
         myRef.child("users").child(id).setValue(user)
+        //Toast.makeText(this@MapsActivity, id, Toast.LENGTH_LONG).show()
     }
 
+    private fun readFriends() {
+        //
+        myRef.child("users").child("$userid").addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(database: DatabaseError) {
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                var get_pos1 = dataSnapshot.getValue(UserItem::class.java)
+                //var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
+                Toast.makeText(this@MapsActivity, "$get_pos1"+1, Toast.LENGTH_LONG).show()
+
+                //var nick = get_pos?.id.replace("_",".")
+                //mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
+            //상대방 위치주소 가져오기 userid를 상대방걸로...
+            myRef.child("users").child("${get_pos1?.friends}").addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(database: DatabaseError) {
+                }
+
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    var get_pos2 = dataSnapshot.getValue(UserItem::class.java)
+                    var pos = LatLng(get_pos2?.latitude!!.toDouble(), get_pos2?.longitude!!.toDouble())
+                    //Toast.makeText(this@MapsActivity, "$get_pos2"+2, Toast.LENGTH_LONG).show()
+
+                    //var nick = get_pos?.id.replace("_",".")
+                    mMap.addMarker(MarkerOptions().position(pos).title(get_pos2?.id))
+                }
+            })
+            }
+        })
+    }
 
 
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-            //상대방 위치주소 가져오기
-            myRef.child("users").child("$userid").addValueEventListener(object : ValueEventListener {
-                override fun onCancelled(database: DatabaseError) {
-                }
-
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    var get_pos = dataSnapshot.getValue(UserItem::class.java)
-                    var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
-                    //Toast.makeText(this@MapsActivity, "$get_pos", Toast.LENGTH_LONG).show()
-
-                    //mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
-                }
-            })
-        //}
-
-
+        readFriends()
 
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
@@ -161,19 +173,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
 
                 //데이터베이스에 uid, 좌표값저장
-                //Toast.makeText(this@MapsActivity, "$userid", Toast.LENGTH_LONG).show()
-                //writeNewUser("$useruid", "${location.latitude}", "${location.longitude}")
-                writeNewUser("$userid","${location.latitude}", "${location.longitude}", "", "")
+                writeNewUser("${userid}","${location.latitude}", "${location.longitude}", "", "okj_nav_com")
             }
         }
-
-
-
-
-
-
     }
 
+    //자신의 마커찍기
     private fun placeMarkerOnMap(location: LatLng) {
         // 1
         val markerOptions = MarkerOptions().position(location)
@@ -284,18 +289,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     // 3
     public override fun onResume() {
         super.onResume()
+
         if (!locationUpdateState) {
             startLocationUpdates()
         }
     }
-
-
-
-
 }
-/*
-    원의 방정식
-    원의 중심이 (x,y)고, 임의의 좌표가 (a,b)이고, r이 반지름이면,
-    (x-a)^2 + (y-b)^2 <= r2 이면
-    (a,b)는 원안에 속하는 좌표인것이다.
- */

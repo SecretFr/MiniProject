@@ -1,6 +1,8 @@
 package gps.g_gps;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,8 +19,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import static android.widget.Toast.LENGTH_SHORT;
 
 public class CreateAccountActivity extends AppCompatActivity {
-
-    private static final String TAG = "CreateAccountActivity";
 
     FirebaseAuth auth;
 
@@ -56,9 +56,9 @@ public class CreateAccountActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 finish();
-                                Toast.makeText(CreateAccountActivity.this, "성공!", LENGTH_SHORT).show();
+                                Toast.makeText(CreateAccountActivity.this, "Login!", LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(CreateAccountActivity.this, "실패", LENGTH_SHORT).show();
+                                Toast.makeText(CreateAccountActivity.this, "Fail", LENGTH_SHORT).show();
                                 accId.setText("");
                                 accPw.setText("");
                                 accPw2.setText("");
@@ -70,6 +70,41 @@ public class CreateAccountActivity extends AppCompatActivity {
             }
         });     //회원가입버튼
 
+        accId.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                accId.setText("");
+                if(accPw.getText().toString().length() == 0)
+                    accPw.setText("패스워드");
+                if(accPw2.getText().toString().length() == 0)
+                    accPw2.setText("패스워드 재확인");
+
+                return false;
+            }
+        });
+        accPw.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                accPw.setText("");
+                if(accId.getText().toString().length() == 0)
+                    accId.setText("계정명(Email)");
+                if(accPw2.getText().toString().length() == 0)
+                    accPw2.setText("패스워드 재확인");
+
+                return false;
+            }
+        });
+        accPw2.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                accPw2.setText("");
+                if(accId.getText().toString().length() == 0)
+                    accId.setText("계정명(Email)");
+                if(accPw.getText().toString().length() == 0)
+                    accPw.setText("패스워드");
+                return false;
+            }
+        });
 
         cancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,5 +113,6 @@ public class CreateAccountActivity extends AppCompatActivity {
             }
         });
     }
+
 
 }

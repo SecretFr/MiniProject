@@ -24,7 +24,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.io.IOException
 
@@ -55,6 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private lateinit var intent1 : Intent
     var userid :String = ""
+    var getSearch : String = ""
     //var useruid :String = ""
 
 
@@ -76,10 +76,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         userid = intent1.getStringExtra("userid")
         //useruid = intent1.getStringExtra("useruid")
 
-
-
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -93,8 +90,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             }
         }
         createLocationRequest()
-
-
     } // onCreate
 
     //데이터베이스에 값들 등록함
@@ -106,7 +101,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun readFriends() {
-        //
+        //일단 자신의 데이터베이스에서 friend값을 불러옴
         myRef.child("users").child("$userid").addValueEventListener(object : ValueEventListener {
             override fun onCancelled(database: DatabaseError) {
             }
@@ -114,24 +109,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 var get_pos1 = dataSnapshot.getValue(UserItem::class.java)
                 //var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
-                Toast.makeText(this@MapsActivity, "$get_pos1"+1, Toast.LENGTH_LONG).show()
+                //Toast.makeText(this@MapsActivity, "$get_pos1"+1, Toast.LENGTH_LONG).show()
 
-                //var nick = get_pos?.id.replace("_",".")
-                //mMap.addMarker(MarkerOptions().position(pos).title(get_pos?.id))
-            //상대방 위치주소 가져오기 userid를 상대방걸로...
-            myRef.child("users").child("${get_pos1?.friends}").addValueEventListener(object : ValueEventListener {
-                override fun onCancelled(database: DatabaseError) {
+                if("${get_pos1?.friends}" == "")
+                {
+                    Toast.makeText(this@MapsActivity, "상대id를 등록해주세요", Toast.LENGTH_LONG).show()
+                    finish()
                 }
+                //상대방 위치주소 가져오기
+                myRef.child("users").child("${get_pos1?.friends}").addValueEventListener(object : ValueEventListener {
+                    override fun onCancelled(database: DatabaseError) {
+                    }
 
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    var get_pos2 = dataSnapshot.getValue(UserItem::class.java)
-                    var pos = LatLng(get_pos2?.latitude!!.toDouble(), get_pos2?.longitude!!.toDouble())
-                    //Toast.makeText(this@MapsActivity, "$get_pos2"+2, Toast.LENGTH_LONG).show()
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        var get_pos2 = dataSnapshot.getValue(UserItem::class.java)
+                        var pos = LatLng(get_pos2?.latitude!!.toDouble(), get_pos2?.longitude!!.toDouble())
+                        //Toast.makeText(this@MapsActivity, "$get_pos2"+2, Toast.LENGTH_LONG).show()
 
-                    //var nick = get_pos?.id.replace("_",".")
-                    mMap.addMarker(MarkerOptions().position(pos).title(get_pos2?.id))
-                }
-            })
+                        //var nick = get_pos?.id.replace("_",".")
+                        mMap.addMarker(MarkerOptions().position(pos).title(get_pos2?.id))
+                    }
+                })
             }
         })
     }
@@ -172,8 +170,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
 
-                //데이터베이스에 uid, 좌표값저장
-                writeNewUser("${userid}","${location.latitude}", "${location.longitude}", "", "okj_nav_com")
+
+                myRef.child("users").child("$userid").addValueEventListener(object : ValueEventListener {
+                    override fun onCancelled(database: DatabaseError) {
+                    }
+
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        var get_friend1 = dataSnapshot.getValue(UserItem::class.java)
+                        //var pos = LatLng(get_pos?.latitude!!.toDouble(), get_pos?.longitude!!.toDouble())
+                        //데이터베이스에 uid, 좌표값저장
+                        writeNewUser("${userid}","${location.latitude}", "${location.longitude}", "","${get_friend1?.friends}")
+                        //Toast.makeText(this@MapsActivity, "${get_friend1?.friends}" + "friend", Toast.LENGTH_LONG).show()
+                    }
+                })
+
             }
         }
     }

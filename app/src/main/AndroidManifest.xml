@@ -50,6 +50,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".CreateAccountActivity" />
+        <activity android:name=".RegFriendActivity" />
     </application>
 
 </manifest>

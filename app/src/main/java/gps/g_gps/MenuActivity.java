@@ -8,15 +8,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserInfo;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -26,12 +19,6 @@ public class MenuActivity extends AppCompatActivity {
 
     FirebaseDatabase database;
     DatabaseReference myRef;
-    /*
-    FirebaseAuth mAuth;
-    FirebaseAuth.AuthStateListener mAuthListener;
-    FirebaseUser currentUser;
-
-     */
 
 
     @Override
@@ -45,17 +32,16 @@ public class MenuActivity extends AppCompatActivity {
 
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference("users");
-        //mAuth = FirebaseAuth.getInstance();
-        //initFirebaseAuth();
+
         //맵 버튼
         mapBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MenuActivity.this, MapsActivity.class);
-                Intent intent2 = getIntent();
-                intent.putExtra("userid", intent2.getStringExtra("userid"));
-                //intent.putExtra("useruid", intent2.getStringExtra("useruid"));
-                startActivity(intent);
+                    Intent intent = new Intent(MenuActivity.this, MapsActivity.class);
+                    Intent intent2 = getIntent();
+                    intent.putExtra("userid", intent2.getStringExtra("userid"));
+                    //intent.putExtra("useruid", intent2.getStringExtra("useruid"));
+                    startActivity(intent);
             }
         });
 
@@ -80,7 +66,10 @@ public class MenuActivity extends AppCompatActivity {
         regBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(MenuActivity.this, RegFriendActivity.class);
+                Intent intent2 = getIntent();
+                intent.putExtra("userid", intent2.getStringExtra("userid"));
+                startActivity(intent);
             }
         });
 
